@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.kwonyoung_jae.fashionistagram.AddPhotoActivity">
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/logo_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="35dp">
+        <ImageView
+            android:src="@drawable/logo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+   </android.support.v7.widget.Toolbar>
+    
+    <LinearLayout
+        android:id="@+id/toolbar_division"
+        android:layout_width="match_parent"
+        android:layout_height="10dp"
+        android:layout_below="@+id/logo_toolbar"
+        android:background="@color/colorDivision">
+    </LinearLayout>
+    <ImageView
+        android:layout_below="@+id/toolbar_division"
+        android:layout_margin="12dp"
+        android:id="@+id/target_photo"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_centerHorizontal="true"
+        />
+    <EditText
+        android:id="@+id/photo_context"
+        android:layout_below="@+id/target_photo"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:hint="옷 이쁘당~"
+        />
+    <Button
+        android:id="@+id/photo_submit"
+        android:layout_below="@+id/photo_context"
+        android:layout_margin="8dp"
+        android:text="사진 올리기"
+        android:theme="@style/ButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</RelativeLayout>

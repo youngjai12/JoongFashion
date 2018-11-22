@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "411675648831",
+    "firebase_url": "https://fashionistagram-66015.firebaseio.com",
+    "project_id": "fashionistagram-66015",
+    "storage_bucket": "fashionistagram-66015.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:411675648831:android:7057cab48b275d5a",
+        "android_client_info": {
+          "package_name": "com.example.kwonyoung_jae.fashionistagram"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "411675648831-4b70f2ompu9le8que7iicjgjrma2uc0m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.kwonyoung_jae.fashionistagram",
+            "certificate_hash": "3ed6641caaaa7867a3ea7f089aa51b79a19108ef"
+          }
+        },
+        {
+          "client_id": "411675648831-is15q2hr7l59u6ogvasosoljh8avi8bn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-OqDQqcGyq4CrmBBjANrasclRHgz0QAU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "411675648831-is15q2hr7l59u6ogvasosoljh8avi8bn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
