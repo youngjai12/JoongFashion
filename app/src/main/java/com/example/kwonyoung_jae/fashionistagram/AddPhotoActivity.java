@@ -11,11 +11,15 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
@@ -35,14 +39,19 @@ public class AddPhotoActivity extends AppCompatActivity {
     FirebaseFirestore firestore;
     FirebaseStorage storage;
     private FirebaseAuth mAuth;
+    EditText photo_explain;
     ImageView addphoto;
     public Uri photoUri;
     Button submit_btn;
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_photo);
-
+        photo_explain = findViewById(R.id.photo_context);
         storage = FirebaseStorage.getInstance();
         firestore = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
@@ -93,7 +102,7 @@ public class AddPhotoActivity extends AppCompatActivity {
         }
     }
     public void contentUpload(){
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        final String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         Toast.makeText(this, timestamp, Toast.LENGTH_SHORT).show();
         String filename = timestamp+".png";
         //중복되지 않는 파일명을 주기 위함.
@@ -101,19 +110,31 @@ public class AddPhotoActivity extends AppCompatActivity {
         storageReference.putFile(photoUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Toast.makeText(getApplicationContext(),"업로드 성공!! 흐흫",Toast.LENGTH_LONG).show();
-                Log.d("photo_upload successful","good");
-                //Uri uri = taskSnapshot.getResult();
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(getApplicationContext(),"업로드에 실패하였다.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),"업로드 작업 완료됨",Toast.LENGTH_LONG).show();
+
+                ContentDTO contentDTO = new ContentDTO();
+                contentDTO.uid = mAuth.getCurrentUser().getUid();
+                contentDTO.explain = photo_explain.getText().toString();
+                contentDTO.timestamp = timestamp;
+                contentDTO.userId = mAuth.getCurrentUser().getEmail();
+
+                firestore.collection("images").document().set(contentDTO);
+
+                setResult(Activity.RESULT_OK);
+
+                finish();
 
             }
         });
-        //여기서 부터 firebase storage 연결.
+
+        }
+
+
 
     }
 
-}
+
+        //여기서 부터 firebase storage 연결.
+
+
+
