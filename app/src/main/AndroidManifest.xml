@@ -23,7 +23,8 @@
         </activity>
         <activity android:name=".CreateProfileActivity" />
         <activity android:name=".HomeActivity" />
-        <activity android:name=".AddPhotoActivity"></activity>
+        <activity android:name=".AddPhotoActivity" />
+        <activity android:name=".CommentActivity"></activity>
     </application>
 
 </manifest>

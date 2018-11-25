@@ -27,21 +27,20 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import io.grpc.Context;
 
-public class AddPhotoActivity extends AppCompatActivity {
+public class AddPhotoActivity extends AppCompatActivity  {
 
     private static int PICK_iMAGE_FROM_ALBUM=0;
-    private static final String[] photoURI = null;
     FirebaseFirestore firestore;
     FirebaseStorage storage;
     private FirebaseAuth mAuth;
     EditText photo_explain;
     ImageView addphoto;
-    public Uri photoUri;
+    Uri photoUri;
     Button submit_btn;
 
 
@@ -102,23 +101,30 @@ public class AddPhotoActivity extends AppCompatActivity {
         }
     }
     public void contentUpload(){
-        final String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        Toast.makeText(this, timestamp, Toast.LENGTH_SHORT).show();
-        String filename = timestamp+".png";
+        final String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        Toast.makeText(this, time, Toast.LENGTH_SHORT).show();
+        String filename = time+".png";
         //중복되지 않는 파일명을 주기 위함.
+
+
         final StorageReference storageReference = storage.getReference().child("images").child(filename);
         storageReference.putFile(photoUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Toast.makeText(getApplicationContext(),"업로드 작업 완료됨",Toast.LENGTH_LONG).show();
-
-                ContentDTO contentDTO = new ContentDTO();
+                final ContentDTO contentDTO = new ContentDTO();
+                Uri uri = taskSnapshot.getDownloadUrl();
+                contentDTO.imageUrl=uri.toString();
                 contentDTO.uid = mAuth.getCurrentUser().getUid();
                 contentDTO.explain = photo_explain.getText().toString();
-                contentDTO.timestamp = timestamp;
                 contentDTO.userId = mAuth.getCurrentUser().getEmail();
 
+                //Date date = new Date();
+                //SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd:mm:ss");
+                //contentDTO.timestamp = simpleDateFormat.format(date);
+                contentDTO.timestamp = System.currentTimeMillis();
                 firestore.collection("images").document().set(contentDTO);
+                //contentDTO 형식으로 넣어주는 것을 말함.
 
                 setResult(Activity.RESULT_OK);
 

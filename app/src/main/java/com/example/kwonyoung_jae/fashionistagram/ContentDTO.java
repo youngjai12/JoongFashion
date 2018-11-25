@@ -5,13 +5,13 @@ import java.util.Map;
 
 public class ContentDTO {
     public String explain;
-    public String imageUrl;
+    public String imageUrl = null;
 
     public String uid;
 
     public String userId;
 
-    public String timestamp;
+    public long timestamp;
 
     public int favoriteCount = 0;
 

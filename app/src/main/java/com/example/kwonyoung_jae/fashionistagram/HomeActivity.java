@@ -36,8 +36,6 @@ public class HomeActivity extends AppCompatActivity implements BottomNavigationV
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         nav = findViewById(R.id.main_navigation);
-        progbar = findViewById(R.id.progress_bar);
-        progbar.setVisibility(View.VISIBLE);
         nav.setOnNavigationItemSelectedListener(this);
         nav.setSelectedItemId(R.id.action_home);
         toolbar = findViewById(R.id.my_toolbar);
@@ -79,7 +77,7 @@ public class HomeActivity extends AppCompatActivity implements BottomNavigationV
                 loadFragment(fragment2);
                 return true;
             case R.id.action_account:
-                uid = FirebaseAuth.getInstance().getUid();
+                uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                 android.support.v4.app.Fragment fragment3 = new UserFragment();
                 loadFragment(fragment3);
                 return true;
