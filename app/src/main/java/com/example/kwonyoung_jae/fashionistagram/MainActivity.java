@@ -1,14 +1,19 @@
 package com.example.kwonyoung_jae.fashionistagram;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -19,6 +24,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageException;
+import com.google.firebase.storage.StorageReference;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -29,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button mlogin;
     private Button mcreate;
     private EditText memail,mpassword;
-
+    private ImageView testview;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,7 +51,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mpassword = findViewById(R.id.password_edittext);
         mlogin.setOnClickListener(this);
         mcreate.setOnClickListener(this);
+
+
+
+        //crawl_update();
     }
+    public void crawl_update(){
+        final FirebaseFirestore firestore;
+        firestore = FirebaseFirestore.getInstance();
+        String filename = "11";
+        final ContentDTO contentDTO = new ContentDTO();
+        for(int i=10;i<100;i++) {
+            final String ff = filename+i;
+            Log.d("과연 "," 파일명은 제대로 들어갔을까?"+ff);
+            StorageReference storageReference;
+            try {
+                storageReference = FirebaseStorage.getInstance().getReference().child("styles").child(ff + ".png");
+            }
+            catch (RuntimeException e){
+                continue;
+            }
+            storageReference.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
+                @Override
+                public void onComplete(@NonNull Task<Uri> task) {
+                    String uri = task.getResult().toString();
+                    contentDTO.imageUrl = uri;
+                    contentDTO.photoid = ff+".png";
+                    firestore.collection("style").document(contentDTO.photoid).set(contentDTO);
+
+                }
+            });
+
+
+        }
+    }
+
     public void login(){
         final String usermail = memail.getText().toString().trim();
         final String password = mpassword.getText().toString().trim();

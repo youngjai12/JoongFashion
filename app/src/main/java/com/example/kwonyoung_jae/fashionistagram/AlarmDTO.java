@@ -13,5 +13,6 @@ public class AlarmDTO {
 
     public int kind; //0 : 좋아요, 1: 팔로우, 2: 메세지
 
+    public long timestamp;
     public String message;
 }

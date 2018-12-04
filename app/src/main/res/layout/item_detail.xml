@@ -6,14 +6,14 @@
     android:layout_height="wrap_content">
 
     <LinearLayout
-
-        android:orientation="vertical"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:layout_width="match_parent"
         android:layout_height="50dp">
         <ImageView
             android:id="@+id/detailview_profileimage"
             android:layout_margin="7.5dp"
-            android:layout_width="match_parent"
+            android:layout_width="35dp"
             android:layout_height="35dp"
             android:src="@mipmap/ic_launcher"
             />

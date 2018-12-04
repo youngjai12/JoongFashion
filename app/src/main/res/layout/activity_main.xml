@@ -71,6 +71,10 @@
             android:text="회원가입하기"
             android:theme="@style/ButtonStyle"
             />
+        <ImageView
+            android:id="@+id/test_image"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
     </LinearLayout>
 
 </RelativeLayout>

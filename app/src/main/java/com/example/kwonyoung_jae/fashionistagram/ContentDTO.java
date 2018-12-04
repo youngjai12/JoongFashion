@@ -10,19 +10,21 @@ public class ContentDTO {
     public String uid;
 
     public String userId;
-
+    public String photoid;
     public long timestamp;
+    public String feature;
 
     public int favoriteCount = 0;
 
     public Map<String, Boolean> favorites = new HashMap<>();
 
-    public Map<String, Comment> comments;
 
     public static class Comment {
+        public String photoid;
         public String uid;
         public String userId;
         public String comment;
+        public long timestamp;
     }
     @Override
     public String toString(){

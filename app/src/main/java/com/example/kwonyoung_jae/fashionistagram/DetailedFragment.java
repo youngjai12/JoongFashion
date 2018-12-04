@@ -1,48 +1,40 @@
 package com.example.kwonyoung_jae.fashionistagram;
 
-import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 
-import android.app.FragmentTransaction;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.RecyclerView.ViewHolder;
-import android.text.Layout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.MutableData;
-import com.google.firebase.database.Transaction;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import org.w3c.dom.Text;
+import org.w3c.dom.Document;
 
+import java.io.BufferedReader;
 import java.util.ArrayList;
 
 
@@ -60,7 +52,6 @@ public class DetailedFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         mAuth=FirebaseAuth.getInstance();
-
         View view = inflater.inflate(R.layout.fragment_detailed, container, false);
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.detailview_recyle); // 전체적인 reclyeview 의 xml을 말한다.
         //현재 창에다가 recyclerview를 띄우라는 소리인듯.
@@ -80,25 +71,27 @@ public class DetailedFragment extends Fragment {
 
         DetailRecyclerViewAdapter() {
             firestore= FirebaseFirestore.getInstance();
-            String uid = mAuth.getCurrentUser().getUid();
-            firestore.collection("images").orderBy("timestamp").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                    if(task.isSuccessful()){
-                        contentDTOs = new ArrayList<ContentDTO>();
-                        contentUidList = new ArrayList<String>();
 
-                    for(DocumentSnapshot doc : task.getResult()) {
-                        Log.d("tag","oh maybe success in accessing firebase?");
-                        ContentDTO item = doc.toObject(ContentDTO.class);
-                        contentDTOs.add(item);
-                        }
-                        notifyDataSetChanged();
-                    }else{
-                        Log.d("TAG","error getting documents....shiba",task.getException());
-                    }
-                }
-            });
+            String uid = mAuth.getCurrentUser().getUid();
+
+           firestore.collection("images").orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener(new EventListener<QuerySnapshot>() {
+               @Override
+               public void onEvent(QuerySnapshot queryDocumentSnapshots, FirebaseFirestoreException e) {
+                   contentDTOs = new ArrayList<>();
+                   contentUidList = new ArrayList<>();
+                   if(queryDocumentSnapshots == null){
+                       Toast.makeText(getContext(),"nonono",Toast.LENGTH_LONG).show();
+                   }else{
+                       for(QueryDocumentSnapshot doc : queryDocumentSnapshots){
+                           ContentDTO item = doc.toObject(ContentDTO.class);
+                           contentDTOs.add(item);
+                           contentUidList.add(item.uid);
+                       }
+                       notifyDataSetChanged();
+                   }
+               }
+           });
+
         }
         @Nullable
         @Override
@@ -109,16 +102,45 @@ public class DetailedFragment extends Fragment {
         }
 
         @Override //그 뷰에 나올 내용들을 정리하는 것.
-        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, final int position) {
             final int finalPosition = position;
 
             ((CustomViewHolder)holder).name.setText(contentDTOs.get(position).userId);
+            ((CustomViewHolder)holder).name.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Fragment fragment = new UserFragment();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("destinationUid",contentDTOs.get(position).uid);
+                    bundle.putString("userID",contentDTOs.get(position).userId);
+                    fragment.setArguments(bundle);
+                    getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.main_frame,fragment)
+                            .commit();
+                }
+            });
             Glide.with(holder.itemView.getContext()).load(contentDTOs.get(position).imageUrl)
                     .into(((CustomViewHolder)holder).content);
 
 
 
             ((CustomViewHolder)holder).comment_text.setText(contentDTOs.get(position).explain);
+            /*
+            ((CustomViewHolder)holder).comment_text.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Fragment fragment = new UserFragment();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("destinationUid",contentDTOs.get(finalPosition).uid);
+                    bundle.putString("userId",contentDTOs.get(finalPosition).userId);
+                    bundle.putString("contentUid",contentUidList.get(finalPosition));
+                    //bundle.putInt(FRAGMENT_ARG , 5);
+                    fragment.setArguments(bundle); // 이걸 BUNDLE에 넣어주는 것이다.
+                    //activity에서는 intent 사이에 데이터 넘길 때 put , setArgument하는 것이다.
+                    getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.main_frame,fragment)
+                            .commit();
+                }
+            });
+            */
 
             ((CustomViewHolder)holder).favorite.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -128,6 +150,10 @@ public class DetailedFragment extends Fragment {
             });
             if(contentDTOs.get(position).favorites.containsKey(mAuth.getCurrentUser().getUid())){
                 ((CustomViewHolder)holder).favorite.setImageResource(R.drawable.ic_favorite);
+                //favories에는 없으면 0이지만, 원래는 uid가 들어간다. 그래야 누가 좋아요를 했는지 알 수 있다.
+                //그래서 현재 user가 만약에 좋아요를 눌렀으면 거기에 favorites 에 자신의 uid가 들어가게 된다. (주민등록번호마냥)
+                //그래서 faovirte를 열어보고 자신이 눌렀으면 눌렀다는 표시를 보여줘야 하므로 하트가 색칠되게 된다.
+                //containsKey가 아무래도 그냥 그 있다 없다를 return 하는 그것인듯..
             }else{
                 ((CustomViewHolder)holder).favorite.setImageResource(R.drawable.ic_favorite_border);
             }
@@ -137,14 +163,38 @@ public class DetailedFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(v.getContext(),CommentActivity.class);
-                    intent.putExtra("imageUid",contentUidList.get(finalPosition));
-                    intent.putExtra("detinationUid",contentDTOs.get(finalPosition).uid);
-                    Log.d("DetailViewFragment",contentUidList.get(finalPosition)==null ? "NULL":
-                    contentUidList.get(finalPosition));
+                    intent.putExtra("destinationUid",contentDTOs.get(position).uid);
+                    Log.d("finalposition","number is "+finalPosition);
+                    intent.putExtra("imageUid",contentDTOs.get(finalPosition).photoid);
+                    Log.d("DetailViewFragment",contentUidList.get(finalPosition)==null ? "NULL": contentUidList.get(finalPosition));
                     startActivity(intent);
                 }
             });
-
+        }
+        private void favoriteEvent(final int position) {
+            Log.d("tag"," position index : ."+contentUidList.get(position));
+            //지금 contentUidList 에는 어느사진인지가 들어가 있다. 그래야 그 사진에 접근해서 좋아요를 누르니깐 ....
+            final DocumentReference docref = firestore.collection("images").document(contentDTOs.get(position).photoid);
+            firestore.runTransaction(new com.google.firebase.firestore.Transaction.Function<Void>() {
+                @Nullable
+                @Override
+                public Void apply(@NonNull com.google.firebase.firestore.Transaction transaction) throws FirebaseFirestoreException {
+                    String uid = mAuth.getCurrentUser().getUid();
+                    ContentDTO item  = transaction.get(docref).toObject(ContentDTO.class);
+                    Log.d("tag","내가 고른 아이템의 photoid는 ...? "+item.photoid);
+                    if(item.favorites.containsKey(uid)){
+                        item.favoriteCount = item.favoriteCount-1;
+                        item.favorites.remove(uid);
+                    }else{
+                        //좋아요를 누르지 않은 상태를 말함. -> 누르는 상황으로 변해가는 것임.
+                        item.favoriteCount = item.favoriteCount+1;
+                        item.favorites.put(uid,true);
+                        favoriteAlarm(contentDTOs.get(position).uid);
+                    }
+                    transaction.set(docref,item);
+                    return null;
+                }
+            });
         }
 
         @Override
@@ -154,48 +204,20 @@ public class DetailedFragment extends Fragment {
             //return 4;
         }
 
-        private void favoriteEvent(int position){
-            final int finalPosition = position;
-            FDB.getReference("images").child(contentUidList.get(position)).runTransaction(
-                    new Transaction.Handler() {
-                        @NonNull
-                        @Override
-                        public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
-                            ContentDTO contentDTO = mutableData.getValue(ContentDTO.class);
-                            String uid = mAuth.getCurrentUser().getUid();
-                            if(contentDTO==null){
-                                return Transaction.success(mutableData);
-                            }
-                            if(contentDTO.favorites.containsKey(uid)){
-                                contentDTO.favoriteCount = contentDTO.favoriteCount -1;
-                                contentDTO.favorites.remove(uid);
-                            }else{
-                                contentDTO.favoriteCount = contentDTO.favoriteCount +1;
-                                contentDTO.favorites.put(uid,true);
-                                favoriteAlarm(contentDTOs.get(finalPosition).uid);
-                            }
-                            mutableData.setValue(contentDTO);
-                            return Transaction.success(mutableData);
-                        }
 
-                        @Override
-                        public void onComplete(@android.support.annotation.Nullable
-                                                       DatabaseError databaseError, boolean b,
-                                               @android.support.annotation.Nullable DataSnapshot dataSnapshot) {
-
-                        }
-                    }
-            );
-        }
 
         public void favoriteAlarm (String destinationUid){
             AlarmDTO alarmDTO = new AlarmDTO();
             alarmDTO.destinationUid = destinationUid;
-            alarmDTO.userId = user.getEmail();
-            alarmDTO.uid = user.getUid();
+            alarmDTO.userId = mAuth.getCurrentUser().getEmail();
+            alarmDTO.uid = mAuth.getCurrentUser().getUid();
             alarmDTO.kind = 0;
-            FDB.getReference().child("alarms").push().setValue(alarmDTO);
+            FirebaseFirestore.getInstance().collection("alarms").document().set(alarmDTO);
+
         }
+
+
+
         private class CustomViewHolder extends RecyclerView.ViewHolder {
             public ImageView comment, favorite, content,profile;
             public TextView name,comment_text,favoritecount;
@@ -211,4 +233,5 @@ public class DetailedFragment extends Fragment {
             }
         }
     }
+
 }
