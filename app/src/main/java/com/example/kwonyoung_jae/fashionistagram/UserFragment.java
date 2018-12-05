@@ -3,6 +3,7 @@ package com.example.kwonyoung_jae.fashionistagram;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
@@ -15,6 +16,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.RecyclerView;
@@ -50,6 +52,9 @@ import java.net.NoRouteToHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Vector;
+
+import utils.RecyclerTouchListener;
 
 
 public class UserFragment extends Fragment {
@@ -112,7 +117,8 @@ public class UserFragment extends Fragment {
         recyclerView = fragView.findViewById(R.id.account_recycler);
         recyclerView.setAdapter(new UserFragmentRecyclerViewAdatper());
         recyclerView.setLayoutManager(new GridLayoutManager(getActivity(),3));
-       // Bundle bundle = getArguments();
+
+        // Bundle bundle = getArguments();
 
         if(getArguments()!=null){
             uid = getArguments().getString("destinationUid");
@@ -172,7 +178,6 @@ public class UserFragment extends Fragment {
         super.onResume();
         getProfileImage();
     }
-
     public void followAlarm(String destinationUid){
         AlarmDTO alarmDTO = new AlarmDTO();
         alarmDTO.destinationUid = destinationUid;
@@ -235,46 +240,33 @@ public class UserFragment extends Fragment {
         });
     }
 
-
     class UserFragmentRecyclerViewAdatper extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
-
         private ArrayList<ContentDTO> contentDTOs1;
-        UserFragmentRecyclerViewAdatper(){
+        ;
+
+        public UserFragmentRecyclerViewAdatper(){
             //여기서 내가 올린 이미지들만 불러와야한다. where equls to
             uid = getArguments().getString("destinationUid");
 
             Toast.makeText(getContext(),"uid = "+uid,Toast.LENGTH_LONG).show();
-            firestore.collection("images").whereEqualTo("uid",uid).addSnapshotListener(new EventListener<QuerySnapshot>() {
-                @Override
-                public void onEvent(QuerySnapshot queryDocumentSnapshots, FirebaseFirestoreException e) {
-                    contentDTOs1 = new ArrayList<>();
-                    for(QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        ContentDTO item = doc.toObject(ContentDTO.class);
-                        contentDTOs1.add(item);
-                    }
-                    postCount.setText(String.valueOf(contentDTOs1.size()));
-                    notifyDataSetChanged();
 
-                }
-            });
-
-
-            /*
-            firestore.collection("images").whereEqualTo("uid",uid).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            firestore.collection("userClothes").whereEqualTo("uid",uid).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                 @Override
                 public void onComplete(@NonNull Task<QuerySnapshot> task) {
                     if(task.isSuccessful()){
-                        contentDTOs = new ArrayList<>();
+                        contentDTOs1=new ArrayList<>();
                         for(DocumentSnapshot doc : task.getResult()){
                             ContentDTO item = doc.toObject(ContentDTO.class);
-                            contentDTOs.add(item);
+                            contentDTOs1.add(item);
                         }
-                        postCount.setText(String.valueOf(contentDTOs.size()));
+                        postCount.setText(String.valueOf(contentDTOs1.size()));
                         notifyDataSetChanged();
+                        //getVector(contentDTOs1);
+
                     }
                 }
             });
-         */
+
         }
 
         @NonNull
@@ -292,6 +284,7 @@ public class UserFragment extends Fragment {
                     .load(contentDTOs1.get(position).imageUrl).apply(new RequestOptions().centerCrop())
 
                     .into(((CustomViewHolder) holder).user_image);
+
 
         }
 
@@ -375,6 +368,36 @@ public class UserFragment extends Fragment {
             }
         });
 
+
+
+    }
+
+    public void getVector(ArrayList<ContentDTO> arr){
+        Log.d("#####몇","개나 거칠까??####"+ arr.size());
+        int[] index ={6,7,8,13,14,15,16,20,21,22,32,33,34,35,36,37,38,39,40,41,42,43,44};
+        int[] feature_vector = new int[index.length];
+        for(int i = 0; i< arr.size(); i++){
+                Log.d("##### 무슨사진?","##### 사진은 바로 #####"+ arr.get(i).photoid);
+                for(int j=0;j<index.length;i++){
+                    Log.d("##### vector :","##### vectro 계산은 ? "+arr.get(i).feature);
+                    feature_vector[j] =feature_vector[j]+ arr.get(i).feature.charAt(index[j]);
+                }
+            }
+        String str_feature ="";
+        for(int i=0;i<index.length;i++){
+            str_feature = str_feature + Character.forDigit(feature_vector[i], 10);
+        }
+        Log.d("##### 과연 ##","############# 사용자의 vector는 ###### "+str_feature );
+        final String finalStr_feature = str_feature;
+        firestore.collection("users").document(uid).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            FollowDTO fo = new FollowDTO();
+            @Override
+            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+
+                fo = documentSnapshot.toObject(FollowDTO.class);
+                fo.vector = finalStr_feature;
+            }
+        });
 
 
     }

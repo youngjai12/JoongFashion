@@ -93,7 +93,7 @@ public class AlarmFragment extends Fragment {
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, final int position) {
             final ImageView profileImage = ((CustomViewHolder)holder).profileImage;
             TextView commentText = ((CustomViewHolder)holder).profileText;
-
+            /*
             FirebaseFirestore.getInstance().collection("profileImages").document(alarmDTOList.get(position).uid)
                     .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                 @Override
@@ -105,7 +105,7 @@ public class AlarmFragment extends Fragment {
                     }
                 }
             });
-
+            */
             switch (alarmDTOList.get(position).kind){
                 case 0:
                     String str_0 = alarmDTOList.get(position).userId + getString(R.string.alarm_favorite);
@@ -113,7 +113,7 @@ public class AlarmFragment extends Fragment {
                     break;
                 case 1:
                     String str_1 = alarmDTOList.get(position).userId + getString(R.string.alarm_who)
-                            +alarmDTOList.get(position).message + getString(R.string.alarm_comment);
+                            /*+alarmDTOList.get(position).message + */+getString(R.string.alarm_comment);
                     commentText.setText(str_1);
                     break;
                 case 2:

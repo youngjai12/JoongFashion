@@ -106,6 +106,9 @@ public class GridFragment extends Fragment {
                 public void onClick(View v) {
                     Intent intent = new Intent(v.getContext(),AddPhotoActivity.class);
                     intent.putExtra("selector",mAuth.getCurrentUser().getUid());
+                    intent.putExtra("imageURI",contentDTOs.get(position).imageUrl);
+                    intent.putExtra("photoid",contentDTOs.get(position).photoid);
+                    Log.d("#######","###################이미지 URI는 제대로 찍혓나?#########"+contentDTOs.get(position).imageUrl);
                     Log.d("이 사진을 선택한 "," 사람은 바로 : "+mAuth.getCurrentUser().getUid());
                     Log.d("finalposition","number is "+position);
                     intent.putExtra("imageUid",contentDTOs.get(position).photoid);

@@ -18,7 +18,6 @@ public class ContentDTO {
 
     public Map<String, Boolean> favorites = new HashMap<>();
 
-
     public static class Comment {
         public String photoid;
         public String uid;

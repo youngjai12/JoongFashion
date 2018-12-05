@@ -74,7 +74,7 @@ public class DetailedFragment extends Fragment {
 
             String uid = mAuth.getCurrentUser().getUid();
 
-           firestore.collection("images").orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener(new EventListener<QuerySnapshot>() {
+           firestore.collection("userClothes").orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener(new EventListener<QuerySnapshot>() {
                @Override
                public void onEvent(QuerySnapshot queryDocumentSnapshots, FirebaseFirestoreException e) {
                    contentDTOs = new ArrayList<>();
@@ -174,7 +174,7 @@ public class DetailedFragment extends Fragment {
         private void favoriteEvent(final int position) {
             Log.d("tag"," position index : ."+contentUidList.get(position));
             //지금 contentUidList 에는 어느사진인지가 들어가 있다. 그래야 그 사진에 접근해서 좋아요를 누르니깐 ....
-            final DocumentReference docref = firestore.collection("images").document(contentDTOs.get(position).photoid);
+            final DocumentReference docref = firestore.collection("userClothes").document(contentDTOs.get(position).photoid);
             firestore.runTransaction(new com.google.firebase.firestore.Transaction.Function<Void>() {
                 @Nullable
                 @Override

@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,12 +17,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.StorageTask;
@@ -42,6 +46,7 @@ public class AddPhotoActivity extends AppCompatActivity  {
     ImageView addphoto;
     Uri photoUri;
     Button submit_btn;
+    String selectorUid,Img_URI;
 
 
 
@@ -62,7 +67,7 @@ public class AddPhotoActivity extends AppCompatActivity  {
                 contentUpload();
             }
         });
-
+        /*
         addphoto.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
@@ -72,7 +77,7 @@ public class AddPhotoActivity extends AppCompatActivity  {
                 //startActivitForResult( 그 액티비티를 호출하고, 그 때의 요청코드임)
             }
         });
-        /*
+
         //앨범에서 사진 가져오는 권한 허용문제는 main에서 하는게 한번만 하면 되니깐 .
         //만약 여기 activity에 들어있으면 이 탭들어갈 때마다 해나까. 이상해진다.
         Intent photopicker = new Intent(Intent.ACTION_PICK);
@@ -109,11 +114,44 @@ public class AddPhotoActivity extends AppCompatActivity  {
     public void contentUpload(){
         final String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         Toast.makeText(this, time, Toast.LENGTH_SHORT).show();
-        final String filename = time+".png";
+
+        selectorUid = getIntent().getStringExtra("selector");
+        Img_URI = getIntent().getStringExtra("imageURI");
+        String photoid = getIntent().getStringExtra("photoid");
+
+        final String filename = selectorUid+"_"+photoid+".png";
+
+
+        Glide.with(getApplicationContext()).load(Img_URI).into(addphoto);
+        ContentDTO updateContent = new ContentDTO();
+        updateContent.timestamp = System.currentTimeMillis();
+        Log.d("######","############# 과연 여기까지 성공?  ###########"+photoid);
+        updateContent.photoid = filename;
+        updateContent.imageUrl = Img_URI;
+        updateContent.explain = photo_explain.getText().toString();
+        updateContent.userId = mAuth.getCurrentUser().getEmail();
+        updateContent.uid = selectorUid;
+        //contentDTO.photoid = filename+uuid;
+        updateContent.userId = mAuth.getCurrentUser().getEmail();
+
+        //Date date = new Date();
+        //SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd:mm:ss");
+        //contentDTO.timestamp = simpleDateFormat.format(date);
+
+        firestore.collection("userClothes").document(updateContent.photoid).set(updateContent);
+        //contentDTO 형식으로 넣어주는 것을 말함.
+
+
+
+
+
+
         //중복되지 않는 파일명을 주기 위함.
 
 
-        final StorageReference storageReference = storage.getReference().child("images").child(filename);
+        /*
+        final String filename = time+".png";
+        final StorageReference storageReference = storage.getReference().child("style").child(filename);
         //images라는 폴더에다가 세부 경로로 filename을 지정해줬고, 이는 중복되지 않게 하려고 올린시각을 기준으로 해준 것이다.
         storageReference.putFile(photoUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
            //그리고 그렇게 storage reference로 올릴 위치를 지정해준다음에, 아까 사진을 담고 있는 변수였던, photoUri를 담겨준다.
@@ -144,8 +182,33 @@ public class AddPhotoActivity extends AppCompatActivity  {
 
             }
         });
+        */
 
         }
+    private void favoriteEvent(final String photoid) {
+        Log.d("#######"," ################## 접근하려는 사진 ########## : ."+photoid);
+        //지금 contentUidList 에는 어느사진인지가 들어가 있다. 그래야 그 사진에 접근해서 좋아요를 누르니깐 ....
+        final DocumentReference docref = firestore.collection("style").document(photoid);
+        firestore.runTransaction(new com.google.firebase.firestore.Transaction.Function<Void>() {
+            @Nullable
+            @Override
+            public Void apply(@NonNull com.google.firebase.firestore.Transaction transaction) throws FirebaseFirestoreException {
+                String uid = mAuth.getCurrentUser().getUid();
+                ContentDTO item  = transaction.get(docref).toObject(ContentDTO.class);
+                Log.d("tag","내가 고른 아이템의 photoid는 ...? "+item.photoid);
+                if(item.favorites.containsKey(uid)){
+                    item.favoriteCount = item.favoriteCount-1;
+                    item.favorites.remove(uid);
+                }else{
+                    //좋아요를 누르지 않은 상태를 말함. -> 누르는 상황으로 변해가는 것임.
+                    item.favoriteCount = item.favoriteCount+1;
+                    item.favorites.put(uid,true);
+                }
+                transaction.set(docref,item);
+                return null;
+            }
+        });
+    }
 
 }
 
