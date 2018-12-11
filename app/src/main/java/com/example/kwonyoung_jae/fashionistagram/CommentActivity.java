@@ -56,7 +56,7 @@ public class CommentActivity extends AppCompatActivity {
                 comment.uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
                 comment.timestamp = System.currentTimeMillis();
                 Log.d("무슨 아이디일까","과연 이게 content 맞는가?"+contentUid);
-                FirebaseFirestore.getInstance().collection("images").document(contentUid).collection("comments")
+                FirebaseFirestore.getInstance().collection("userClothes").document(contentUid).collection("comments")
                         .document().set(comment);
                 commentAlarm(destinationUid,message.toString());
             }
@@ -81,7 +81,7 @@ public class CommentActivity extends AppCompatActivity {
     class CommentRecyclerView extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
         private ArrayList<ContentDTO.Comment> commentList;
         CommentRecyclerView(){
-            FirebaseFirestore.getInstance().collection("images").document(contentUid).collection("comments")
+            FirebaseFirestore.getInstance().collection("userClothes").document(contentUid).collection("comments")
                     .addSnapshotListener(new EventListener<QuerySnapshot>() {
                         @Override
                         public void onEvent(QuerySnapshot queryDocumentSnapshots, FirebaseFirestoreException e) {

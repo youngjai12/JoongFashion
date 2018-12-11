@@ -118,7 +118,7 @@ public class AddPhotoActivity extends AppCompatActivity  {
         selectorUid = getIntent().getStringExtra("selector");
         Img_URI = getIntent().getStringExtra("imageURI");
         String photoid = getIntent().getStringExtra("photoid");
-
+        String vector = getIntent().getStringExtra("feature");
         final String filename = selectorUid+"_"+photoid+".png";
 
 
@@ -131,6 +131,7 @@ public class AddPhotoActivity extends AppCompatActivity  {
         updateContent.explain = photo_explain.getText().toString();
         updateContent.userId = mAuth.getCurrentUser().getEmail();
         updateContent.uid = selectorUid;
+        updateContent.feature = vector;
         //contentDTO.photoid = filename+uuid;
         updateContent.userId = mAuth.getCurrentUser().getEmail();
 

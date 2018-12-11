@@ -19,4 +19,8 @@ public class FollowDTO {
     public Map<String, Boolean> followings = new HashMap<>();
 
     public String vector;
+
+    public String uid;
+    public String username;
+
 }

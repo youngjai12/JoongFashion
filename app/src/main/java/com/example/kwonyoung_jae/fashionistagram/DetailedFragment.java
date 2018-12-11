@@ -77,6 +77,9 @@ public class DetailedFragment extends Fragment {
            firestore.collection("userClothes").orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener(new EventListener<QuerySnapshot>() {
                @Override
                public void onEvent(QuerySnapshot queryDocumentSnapshots, FirebaseFirestoreException e) {
+                   Log.d("########## 왜작동?","Detailed 에서는 작동하는가?");
+
+                   Log.d("#### Detailed Frag","addsnapshot 안에 잇는거");
                    contentDTOs = new ArrayList<>();
                    contentUidList = new ArrayList<>();
                    if(queryDocumentSnapshots == null){
@@ -91,6 +94,7 @@ public class DetailedFragment extends Fragment {
                    }
                }
            });
+           Log.d("#### Detailed Frag","addsnapshot 밖에 잇는거");
 
         }
         @Nullable
@@ -124,23 +128,6 @@ public class DetailedFragment extends Fragment {
 
 
             ((CustomViewHolder)holder).comment_text.setText(contentDTOs.get(position).explain);
-            /*
-            ((CustomViewHolder)holder).comment_text.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Fragment fragment = new UserFragment();
-                    Bundle bundle = new Bundle();
-                    bundle.putString("destinationUid",contentDTOs.get(finalPosition).uid);
-                    bundle.putString("userId",contentDTOs.get(finalPosition).userId);
-                    bundle.putString("contentUid",contentUidList.get(finalPosition));
-                    //bundle.putInt(FRAGMENT_ARG , 5);
-                    fragment.setArguments(bundle); // 이걸 BUNDLE에 넣어주는 것이다.
-                    //activity에서는 intent 사이에 데이터 넘길 때 put , setArgument하는 것이다.
-                    getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.main_frame,fragment)
-                            .commit();
-                }
-            });
-            */
 
             ((CustomViewHolder)holder).favorite.setOnClickListener(new View.OnClickListener() {
                 @Override

@@ -54,12 +54,6 @@ public class CreateProfileActivity extends AppCompatActivity implements View.OnC
             mEmail.setError("Email is required");
         }
 
-        if(!Patterns.EMAIL_ADDRESS.matcher(username).matches() && username.contains("@skku.edu")){
-            mEmail.setError("Please enter a vaild email");
-            mEmail.requestFocus();
-            return;
-        }
-
 
         if(password.isEmpty()){
             mPassword.setError("Password is required");
