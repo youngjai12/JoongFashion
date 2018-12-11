@@ -26,6 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,9 +53,6 @@ import java.net.NoRouteToHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Vector;
-
-import utils.RecyclerTouchListener;
 
 
 public class UserFragment extends Fragment {
@@ -64,6 +62,7 @@ public class UserFragment extends Fragment {
     FirebaseAuth mAuth;
     DatabaseReference dbref;
     FirebaseFirestore firestore;
+    String pagevector;
     FirebaseStorage storage;
     String uid, currentUid , photoUri;
     Button follow_btn ;
@@ -74,7 +73,7 @@ public class UserFragment extends Fragment {
     int PICK_PROFILE_FROM_ALBUM=10;
     TextView following_count , follower_count;
     private HomeActivity activity;
-
+    LinearLayout friends;
     public UserFragment() {
         // Required empty public constructor
     }
@@ -97,6 +96,16 @@ public class UserFragment extends Fragment {
         follow_btn = fragView.findViewById(R.id.account_followbtn);
         profile_image = fragView.findViewById(R.id.account_profile);
         following_count = fragView.findViewById(R.id.following_count);
+        friends = fragView.findViewById(R.id.friends_list);
+        friends.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent1 = new Intent(activity,SimilarityActivity.class);
+                intent1.putExtra("destinationUID",uid);
+                startActivity(intent1);
+
+            }
+        });
         follower_count = fragView.findViewById(R.id.follower_count);
 
         profile_image.setOnClickListener(new View.OnClickListener() {
@@ -107,55 +116,43 @@ public class UserFragment extends Fragment {
                         PackageManager.PERMISSION_GRANTED){
                     Intent photo_picker = new Intent(Intent.ACTION_PICK);
                     photo_picker.setType("image/*");
-                    activity.startActivityForResult(photo_picker,PICK_PROFILE_FROM_ALBUM);
+                    getActivity().startActivityForResult(photo_picker,PICK_PROFILE_FROM_ALBUM);
                     //이게 넘어간다. 그리고 activityResult 함수를 여기서 쓰는 것이 아니다.. 그걸 fragment가 속하는 곳으로 간다.
                     //fragment에는 그런 것을 할수가 없다. 그래서 userFragment에 하는게 아니라 넘어가서 HomeActivity에 하는 것임.
                 }
 
             }
         });
+
         recyclerView = fragView.findViewById(R.id.account_recycler);
         recyclerView.setAdapter(new UserFragmentRecyclerViewAdatper());
         recyclerView.setLayoutManager(new GridLayoutManager(getActivity(),3));
 
-        // Bundle bundle = getArguments();
+
 
         if(getArguments()!=null){
             uid = getArguments().getString("destinationUid");
-            Log.d("other uid"," : "+uid);
-            Log.d("my uid "," : "+currentUid);
-
             if(uid!=null && uid.equals(currentUid)){ // 본인계정인 경우 로그아웃, toolbar 기본으로 설정.
-                Log.d("흠...","현재 자기 아이디로 들어갔을 경우");
-                Log.d("왜 이건...","로그아웃으로 안바뀌나??");
+                follow_btn.setText("로그아웃");
                 follow_btn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         getActivity().finish();
-                        Intent intent = new Intent(activity, MainActivity.class);
+                        Intent intent = new Intent(getActivity(), MainActivity.class);
                         getActivity().startActivity(intent);
                         mAuth.signOut();
                     }
                 });
-                follow_btn.setText("로그아웃");
-
             }else{
                 follow_btn.setText("팔로우");
-                Log.d("tag","여기까지는 오네?");
-
                 activity.toolbarImage.setVisibility(View.GONE);
                 activity.backbutton.setVisibility(View.VISIBLE);
                 activity.toolbarname.setVisibility(View.VISIBLE);
                 activity.toolbarname.setText(getArguments().getString("userID"));
-                //((HomeActivity) mainact).toolbarImage.setVisibility(View.GONE);
-                //((HomeActivity) mainact).backbutton.setVisibility(View.INVISIBLE);
-                //((HomeActivity) mainact).toolbarname.setVisibility(View.VISIBLE);
-                //((HomeActivity) mainact).toolbarname.setText(getArguments().getString("userid"));
                 // getArgument??
                 activity.backbutton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.d("tag","back button pressed");
                         activity.nav.setSelectedItemId(R.id.action_home);
                     }
                 });
@@ -166,11 +163,12 @@ public class UserFragment extends Fragment {
                     }
                 });
             }
-        }else{//그냥 입장한경우를 말한다. Detailed 에서 올 때는 destination이 생기는 것임.
-            Log.d("bundle tag","번들이 안생기나? ");
         }
+
+
         getFollowing();
         getFollower();
+
         return fragView;
     }
     @Override
@@ -178,18 +176,8 @@ public class UserFragment extends Fragment {
         super.onResume();
         getProfileImage();
     }
-    public void followAlarm(String destinationUid){
-        AlarmDTO alarmDTO = new AlarmDTO();
-        alarmDTO.destinationUid = destinationUid;
-        alarmDTO.uid = mAuth.getCurrentUser().getUid();
-        alarmDTO.userId = mAuth.getCurrentUser().getEmail();
-        alarmDTO.kind=2;
-        alarmDTO.timestamp = System.currentTimeMillis();
-        firestore.collection("alarms").document().set(alarmDTO);
 
-    }
     public void getProfileImage(){
-        //이게 Home activity 에서 프로필 사진을 올리고 거기서 받아오는 구조인 것임
         image_profileListenerRegistration = firestore.collection("profileImages").document(uid)
                 .addSnapshotListener(new EventListener<DocumentSnapshot>() {
                     @Override
@@ -207,27 +195,29 @@ public class UserFragment extends Fragment {
     }
 
     public void getFollower(){
-    follow_LR = firestore.collection("users").document(uid).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-        FollowDTO followDTO = new FollowDTO();
-        @Override
-        public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
-                 followDTO = documentSnapshot.toObject(FollowDTO.class);
-                 if(followDTO==null){
-                     Log.d("tag","followDTO가 null");
-                     return;
-                 }
-                 follower_count.setText(String.valueOf(followDTO.followerCount));
-                 if(followDTO.followers.containsKey(currentUid)){
-                     follow_btn.setText("팔로우 취소");
-                     follow_btn.getBackground().setColorFilter(ContextCompat.getColor(getActivity(),R.color.colorLightGrey), PorterDuff.Mode.MULTIPLY);
-                 }else{
-                     if(!uid.equals(currentUid)){
-                         follow_btn.setText("팔로우");
-                         follow_btn.getBackground().setColorFilter(null);
-                     }
-                 }
-        }
-    });
+        follow_LR = firestore.collection("users").document(uid).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            FollowDTO followDTO = new FollowDTO();
+
+            @Override
+            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+                followDTO = documentSnapshot.toObject(FollowDTO.class);
+                if(followDTO==null){
+                    Log.d("#### 과연 ","followDTO가 null");
+                    return;
+                }
+                follower_count.setText(String.valueOf(followDTO.followerCount));
+
+                if(followDTO.followers.containsKey(currentUid)){
+                    follow_btn.setText("팔로우 취소");
+                    follow_btn.getBackground().setColorFilter(ContextCompat.getColor(activity,R.color.colorLightGrey), PorterDuff.Mode.MULTIPLY);
+                }else{
+                    if(!uid.equals(currentUid)){
+                        follow_btn.setText("팔로우");
+                        follow_btn.getBackground().setColorFilter(null);
+                    }
+                }
+            }
+        });
     }
     public void getFollowing(){
         following_LR = firestore.collection("users").document(uid).addSnapshotListener(new EventListener<DocumentSnapshot>() {
@@ -235,55 +225,99 @@ public class UserFragment extends Fragment {
             @Override
             public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
                 followDTO = documentSnapshot.toObject(FollowDTO.class);
-                //following_count.setText(String.valueOf(followDTO.followingCount));
+                if(followDTO==null){
+                    return;
+                }else {
+                    following_count.setText(String.valueOf(followDTO.followingCount));
+                }
             }
         });
     }
 
+
     class UserFragmentRecyclerViewAdatper extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
         private ArrayList<ContentDTO> contentDTOs1;
-        ;
 
-        public UserFragmentRecyclerViewAdatper(){
+        UserFragmentRecyclerViewAdatper(){
             //여기서 내가 올린 이미지들만 불러와야한다. where equls to
             uid = getArguments().getString("destinationUid");
-
             Toast.makeText(getContext(),"uid = "+uid,Toast.LENGTH_LONG).show();
 
-            firestore.collection("userClothes").whereEqualTo("uid",uid).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            firestore.collection("userClothes").whereEqualTo("uid",uid)
+
+            .addSnapshotListener(new EventListener<QuerySnapshot>() {
                 @Override
-                public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                    if(task.isSuccessful()){
-                        contentDTOs1=new ArrayList<>();
-                        for(DocumentSnapshot doc : task.getResult()){
+                public void onEvent(QuerySnapshot queryDocumentSnapshots, FirebaseFirestoreException e) {
+                    contentDTOs1= new ArrayList<>();
+                   Log.d("###### 과연 userfrag : ","이건 addsnapshot 안에 있는거");
+                    if(queryDocumentSnapshots==null){
+
+                    }else{
+
+                        for(QueryDocumentSnapshot doc : queryDocumentSnapshots){
                             ContentDTO item = doc.toObject(ContentDTO.class);
                             contentDTOs1.add(item);
                         }
                         postCount.setText(String.valueOf(contentDTOs1.size()));
                         notifyDataSetChanged();
-                        //getVector(contentDTOs1);
+                        getVector(contentDTOs1);
 
                     }
                 }
             });
+            Log.d("###### userfrag : ","이건 addsnapshot 밖에 있는거");
+
+
+
 
         }
 
         @NonNull
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            Log.d("### 과연 ","oncreate view holder 안에서 실행되는 것이다.");
             int width = getResources().getDisplayMetrics().widthPixels / 3;
             ImageView imageView = new ImageView(parent.getContext());
             imageView.setLayoutParams(new LinearLayoutCompat.LayoutParams(width, width));
             return new CustomViewHolder(imageView);
         }
         @Override
-        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-                  Glide.with(holder.itemView.getContext())
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, final int position) {
+            Log.d("###### userfrag : ","이건 OnBindViewHodler에 있는거임.  밖에 있는거");
+
+            Glide.with(holder.itemView.getContext())
 
                     .load(contentDTOs1.get(position).imageUrl).apply(new RequestOptions().centerCrop())
 
                     .into(((CustomViewHolder) holder).user_image);
+
+            ((CustomViewHolder)holder).user_image.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    CharSequence colors[] = new CharSequence[]{"Yes", "NO"};
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                    builder.setTitle("취향 목록에서 제거하시겠습니까?");
+                    builder.setItems(colors, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (which == 0) { // 제거하겠다.
+                                firestore.collection("userClothes").document(contentDTOs1.get(position).photoid).delete()
+                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                Toast.makeText(getContext(),"성공적으로 지워졌습니다",Toast.LENGTH_LONG).show();
+                                            }
+                                        });
+                            } else {
+                                Log.d("############","취소 버튼 눌러버렸는데??");
+                            }
+                        }
+                    });
+                    builder.show();
+
+                }
+            });
+
 
 
         }
@@ -309,15 +343,14 @@ public class UserFragment extends Fragment {
         //현재 firestore에는 users라는 것이 일단 존재하진 않음.없는이름을 collection해서 있는 것 처럼 하면
         //알아서 자동으로 생긴다.
         final DocumentReference docref = firestore.collection("users").document(currentUid);
-        Log.d("request","과연 팔로우 버튼 누르면 제대로 실행이 되는 것인가.");
 
+        final String myvector, friendvector;
         firestore.runTransaction(new Transaction.Function<Void>() {
             @Nullable
             @Override
             public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
 
                 FollowDTO followDTO = transaction.get(docref).toObject(FollowDTO.class);
-
                 if (followDTO == null) {//following 같은걸 하지 않아서 아무 데이터가 없을 때 ...
                     followDTO = new FollowDTO();
                     followDTO.followingCount = 1;
@@ -332,7 +365,6 @@ public class UserFragment extends Fragment {
                 } else {
                     followDTO.followingCount = followDTO.followingCount + 1;
                     followDTO.followings.put(uid, true);
-                    followAlarm(uid);
                 }
                 transaction.set(docref, followDTO);
                 return null;
@@ -372,41 +404,38 @@ public class UserFragment extends Fragment {
 
     }
 
-    public void getVector(ArrayList<ContentDTO> arr){
+    public String getVector(ArrayList<ContentDTO> arr){
         Log.d("#####몇","개나 거칠까??####"+ arr.size());
-        int[] index ={6,7,8,13,14,15,16,20,21,22,32,33,34,35,36,37,38,39,40,41,42,43,44};
+        int[] index ={25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46};
         int[] feature_vector = new int[index.length];
         for(int i = 0; i< arr.size(); i++){
-                Log.d("##### 무슨사진?","##### 사진은 바로 #####"+ arr.get(i).photoid);
-                for(int j=0;j<index.length;i++){
-                    Log.d("##### vector :","##### vectro 계산은 ? "+arr.get(i).feature);
-                    feature_vector[j] =feature_vector[j]+ arr.get(i).feature.charAt(index[j]);
-                }
+            Log.d("##### 무슨사진?","##### 사진은 바로 #####"+ arr.get(i).photoid);
+            for(int j=0;j<index.length;j++){
+                //Log.d("##### j " ," index는 무엇이 될까 ?"+j);
+                feature_vector[j] =feature_vector[j]+ arr.get(i).feature.charAt(index[j])-'0';
             }
-        String str_feature ="";
+        }
+        String str_feature =" ";
         for(int i=0;i<index.length;i++){
-            str_feature = str_feature + Character.forDigit(feature_vector[i], 10);
+            str_feature = str_feature + (char)(feature_vector[i]+48);
         }
         Log.d("##### 과연 ##","############# 사용자의 vector는 ###### "+str_feature );
-        final String finalStr_feature = str_feature;
-        firestore.collection("users").document(uid).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            FollowDTO fo = new FollowDTO();
-            @Override
-            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
-
-                fo = documentSnapshot.toObject(FollowDTO.class);
-                fo.vector = finalStr_feature;
-            }
-        });
-
+        firestore.collection("users").document(uid).update("vector",str_feature);
+        firestore.collection("users").document(uid).update("uid",uid);
+        return str_feature;
 
     }
+
     @Override
     public void onStop(){
         super.onStop();
-        //follow_LR.remove();
-        //following_LR.remove();
+        follow_LR.remove();
+        following_LR.remove();
         //image_profileListenerRegistration.remove();
         //recycle_LR.remove();
     }
+
+
+
+
 }
