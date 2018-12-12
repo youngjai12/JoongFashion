@@ -1,7 +1,10 @@
 package com.example.kwonyoung_jae.fashionistagram;
 
+import android.content.Intent;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -11,11 +14,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
+import android.os.Handler;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -36,52 +40,71 @@ import java.util.Set;
 public class SimilarityActivity extends AppCompatActivity {
     FirebaseFirestore firestore;
     RecyclerView friendRecycle;
-    ArrayList<String> ids = new ArrayList<>();
-    String destid;
+    ArrayList<FollowDTO> ids = new ArrayList<>();
+    String destid,curid;
+    FirebaseAuth mAuth;
     String target_vector;
+    ArrayList<String>UidList = new ArrayList<>();
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_similarity);
 
         destid = getIntent().getStringExtra("destinationUID");
+        curid = getIntent().getStringExtra("currentUID");
         friendRecycle = findViewById(R.id.friend_recyclerview);
-        friendRecycle.setAdapter(new FriendRecyclerView());
+        //아마 이 페이지의 holder 인 host의 uid도 필요하긴 할듯.
+
+        FirebaseFirestore.getInstance().collection("users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                final ArrayList<FollowDTO> friendlist = new ArrayList<>();
+                if(task.isSuccessful()){
+                    for(QueryDocumentSnapshot doc : task.getResult()){
+                        FollowDTO item = doc.toObject(FollowDTO.class);
+                        if(item.uid.equals(destid)){
+                            target_vector = item.vector;
+                        }else{
+                            friendlist.add(item);
+                        }
+                    }
+                   Map<String,Double> simmap = new HashMap<>();
+                    for(int i=0;i<friendlist.size();i++){
+                        UidList.add(friendlist.get(i).uid);
+                        simmap.put(friendlist.get(i).username,getSimilarity(target_vector,friendlist.get(i).vector));
+                    }
+                    // 여기까지 완료하면 friendlist에 그 사람들이 들어가있음. 자기와는 다른...
+                    friendRecycle.setAdapter(new FriendRecyclerView(simmap));
+
+
+                }
+            }
+        });
         friendRecycle.setLayoutManager(new LinearLayoutManager(this));
 
-        //아마 이 페이지의 holder 인 host의 uid도 필요하긴 할듯.
+
     }
 
-
     private class FriendRecyclerView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-        ArrayList<FollowDTO> vector_list;
-        FriendRecyclerView(){
-        Log.d("###### 과연 ####","recyclerview adapter 내용이다.");
-            FirebaseFirestore.getInstance().collection("users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                    vector_list = new ArrayList<>();
-                    if(task.isSuccessful()){
-                        Log.d("#### 과연 ###"," adapter 안에서 array를 읽어오는 이 작업은 언제 실행되나? ");
-                        for(QueryDocumentSnapshot doc : task.getResult()){
-                            Log.d("### 과연 ####","이 lopp을 통과하지 않는건가?");
-
-                            FollowDTO item = doc.toObject(FollowDTO.class);
-                            if(item.uid.equals(destid)){
-                                target_vector = item.vector;
-                                Log.d("###### 과연 ##"," 올바르게 vector를 가지고 오는가?"+target_vector);
-                            }else{
-                                vector_list.add(item);
-                                Log.d("### 과연 ####","이 lopp에서는 여기만 들어오나?");
-                            }
-                        }
-                        notifyDataSetChanged();
-                    }
+        ArrayList<String> friend_ids;
+        ArrayList<Double> sim;
+        FriendRecyclerView(Map<String, Double> class_sim){
+            Iterator<String> it = class_sim.keySet().iterator();
+            friend_ids = new ArrayList<>();
+            sim = new ArrayList<>();
+            while(it.hasNext()){
+                String name = it.next();
+                if(class_sim.get(name)>80){
+                    friend_ids.add(name);
+                    sim.add(class_sim.get(name));
                 }
-            });
-
-
+            }
+            //여기까지 하고 나면 각각의 friends 랑 sim다 나온다.
         }
+
 
         @NonNull
         @Override
@@ -91,19 +114,33 @@ public class SimilarityActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-            Log.d("#### 과연 "," recyclerview 이건 언제 실행되는건가?");
-            Log.d("#### 과연 ","음... vectorlist에는 뭐가 ?"+vector_list.get(position).vector);
-            ((CustomViewHolder)holder).friendsID.setText(vector_list.get(position).uid);
-            Log.d("### 과연 ","my vector 에는 과연 null 이 들어가는 것인가? "+target_vector);
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, final int position) {
+            Log.d("#### 과연 ","음... friendList에는 어떤게?"+friend_ids.get(position));
+            ((CustomViewHolder)holder).friendsID.setText(String.valueOf(friend_ids.get(position)));
+            Log.d("### 과연 ","vector는 똑바로 들어가나? "+sim.get(position));
 
-            ((CustomViewHolder) holder).similairty.setText(String.valueOf(getSimilarity(vector_list.get(position).vector,target_vector)));
+            ((CustomViewHolder) holder).similairty.setText(String.valueOf(sim.get(position)));
+            ((CustomViewHolder) holder).similairty.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Fragment fragment = new UserFragment();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("destinationUid",UidList.get(position));
+                    bundle.putString("userID",curid);
+                    fragment.setArguments(bundle);
+                    getSupportFragmentManager().beginTransaction().replace(R.id.main_frame,fragment)
+                            .commit();
+                    finish();
+
+                }
+            });
+
 
         }
 
         @Override
         public int getItemCount() {
-            return null!=vector_list?vector_list.size():0;
+            return null!=friend_ids?friend_ids.size():0;
         }
 
         private class CustomViewHolder extends RecyclerView.ViewHolder {

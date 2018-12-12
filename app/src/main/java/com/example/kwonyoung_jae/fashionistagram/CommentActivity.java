@@ -23,6 +23,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -81,7 +82,7 @@ public class CommentActivity extends AppCompatActivity {
     class CommentRecyclerView extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
         private ArrayList<ContentDTO.Comment> commentList;
         CommentRecyclerView(){
-            FirebaseFirestore.getInstance().collection("userClothes").document(contentUid).collection("comments")
+            FirebaseFirestore.getInstance().collection("userClothes").document(contentUid).collection("comments").orderBy("timestamp", Query.Direction.DESCENDING)
                     .addSnapshotListener(new EventListener<QuerySnapshot>() {
                         @Override
                         public void onEvent(QuerySnapshot queryDocumentSnapshots, FirebaseFirestoreException e) {

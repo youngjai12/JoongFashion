@@ -1,23 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:paddingBottom="@dimen/dimen_10"
+    android:paddingLeft="@dimen/activity_margin"
+    android:paddingRight="@dimen/activity_margin"
+    android:paddingTop="@dimen/dimen_10"
+    android:id="@+id/background"
     >
+
+    <TextView
+        android:id="@+id/dot"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dot_height"
+        android:layout_marginRight="@dimen/dot_margin_right"
+        android:layout_marginTop="@dimen/dimen_10"
+        android:includeFontPadding="false"
+        android:textColor="@color/colorAccent"
+        android:lineSpacingExtra="0dp"
+        android:textSize="@dimen/dot_text_size" />
+
     <TextView
         android:id="@+id/friend_id"
-        android:layout_width="0dp"
-        android:layout_weight="4"
-        android:layout_margin="7.5dp"
-        android:textStyle="bold"
-        android:layout_height="wrap_content" />
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/dot"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="@dimen/timestamp" />
+
     <TextView
         android:id="@+id/similarity"
-        android:layout_width="0dp"
-        android:layout_weight="6"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@id/friend_id"
+        android:layout_toRightOf="@id/dot"
+        android:textColor="@color/colorDarkGreen"
+        android:textSize="@dimen/note_list_text" />
 
-        />
-</LinearLayout>
+
+
+</RelativeLayout>

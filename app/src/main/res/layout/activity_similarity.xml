@@ -1,50 +1,83 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.kwonyoung_jae.fashionistagram.CommentActivity">
-
-
-    <!-- Toolbar -->
-
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    >
     <android.support.v7.widget.Toolbar
-    android:id="@+id/my_toolbar"
-    android:layout_width="match_parent"
-    android:layout_height="35dp"
-    android:layout_alignParentTop="true"
-    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-    app:contentInsetStart="0dp"
-    app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+            android:id="@+id/my_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:layout_alignParentTop="true"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:contentInsetStart="0dp"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
 
-    <ImageView
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_margin="3dp"
-    android:contentDescription="@string/app_name"
-    android:src="@drawable/logo" />
-
-</android.support.v7.widget.Toolbar>
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="3dp"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/logo" />
+    </android.support.v7.widget.Toolbar>
 
     <LinearLayout
-        android:id="@+id/toolbar_division"
+        android:id="@+id/linearview"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_below="@id/my_toolbar"
-        android:background="@color/colorDivision"
-        android:orientation="horizontal" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="100dp"
+        >
+        <ImageView
+            android:layout_gravity="center"
+            android:id="@+id/look_glass"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:src="@drawable/glass"
 
-    <!-- Contents -->
+            />
+        <TextView
+            android:layout_gravity="center"
+            android:id="@+id/recommend_text"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:textStyle="bold"
+            android:text="비슷한 취향을 가진 사람은 누구일까요?"
+            />
+    </LinearLayout>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/friend_recyclerview"
+        android:layout_below="@+id/linearview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/toolbar_division"
         android:layout_marginBottom="30dp"
-        android:layout_marginTop="8dp" >
-
-    </android.support.v7.widget.RecyclerView>
+        />
 
 </RelativeLayout>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

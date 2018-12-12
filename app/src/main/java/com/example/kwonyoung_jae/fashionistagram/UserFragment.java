@@ -100,8 +100,9 @@ public class UserFragment extends Fragment {
         friends.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent1 = new Intent(activity,SimilarityActivity.class);
+                Intent intent1 = new Intent(getContext(),SimilarityActivity.class);
                 intent1.putExtra("destinationUID",uid);
+                intent1.putExtra("currentUID",currentUid);
                 startActivity(intent1);
 
             }

@@ -15,6 +15,8 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -100,13 +102,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
+
         mAuth.signInWithEmailAndPassword(usermail,password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
+            public void onComplete(@NonNull final Task<AuthResult> task) {
                 FirebaseUser user = mAuth.getCurrentUser();
                 if(task.isSuccessful()){
                     Toast.makeText(getApplicationContext(),"이제 로그인할거임.",Toast.LENGTH_LONG).show();
-
+                    Log.d("#### 과연 #####","화면이 전환되는데 과연 그럴까..? id는 null이라고 할 수 있을가?" +mAuth.getCurrentUser().getUid());
+                    FirebaseFirestore.getInstance().collection("users").document(mAuth.getCurrentUser().getUid()).update("username",usermail).addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d("### 과연 ####","#### 이 작업이 성공?? 그러니깐 db에 추가가될까?");
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    FollowDTO newform = new FollowDTO();
+                                                    newform.username = usermail;
+                                                    FirebaseFirestore.getInstance().collection("users").document(mAuth.getCurrentUser().getUid()).set(newform);
+                                                }
+                                            }
+                    );
                     Intent intent = new Intent(getApplicationContext(),HomeActivity.class);
                     startActivity(intent);
                     finish();
